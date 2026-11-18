@@ -1,7 +1,9 @@
-
 # 🌌 AmeOrbs — Hands-First WebXR Sanctuary
 
 **AmeOrbs** is a serene, controller-free, seated Virtual Reality wellness experience. Designed around a *"Bioluminescent Midnight Zen"* aesthetic, it transforms any space—even a seated airplane or desk chair—into an instant sanctuary for breathwork, stress relief, and deep focus.
+
+🚀 **Live WebXR App:** https://ame-orbs.vercel.app/ 
+🎥 **Video Demo:**  https://youtu.be/m-JWyxgmmT0
 
 ---
 
@@ -52,7 +54,7 @@ Because **AmeOrbs** runs entirely client-side with zero external assets, it reli
 * **3D & WebXR Engine:** Three.js (`XRHandModelFactory`, `WebXRManager`)
 * **Audio Synthesis:** Native Web Audio API (Procedural oscillators & filters)
 * **Build Tool:** Vite
-* **Deployment:** Vercel (Configured with `Permissions-Policy: xr-spatial-tracking=(self)`)
+* **Deployment:** Vercel (https://ame-orbs.vercel.app/) — Configured with `Permissions-Policy: xr-spatial-tracking=(self)`
 
 ---
 
@@ -60,7 +62,7 @@ Because **AmeOrbs** runs entirely client-side with zero external assets, it reli
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/dipsptl/ameorbs.git
+   git clone https://github.com/dipsptl/ameorbs
    cd ameorbs
    ```
 
@@ -75,8 +77,8 @@ Because **AmeOrbs** runs entirely client-side with zero external assets, it reli
    ```
 
 4. **Test in Browser or VR Headset:**
-   * **Desktop:** Open `http://localhost:5173` with a WebXR browser emulator extension. Press `M` to toggle the left palm-up wrist menu, or click to simulate pinches.
-   * **VR Headset:** Open the deployed HTTPS URL inside your headset's WebXR browser, set your controllers aside, and tap **Enter VR Sanctuary**.
+   * **Live Hosted Demo:** Open https://ame-orbs.vercel.app/ directly in your Meta Quest Browser or desktop WebXR emulator.
+   * **Local Desktop:** Open `http://localhost:5173` with a WebXR browser emulator extension. Press `M` to toggle the left palm-up wrist menu, or click to simulate pinches.
 
 ---
 
