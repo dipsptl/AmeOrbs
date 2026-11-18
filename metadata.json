@@ -1,0 +1,6 @@
+{
+  "name": "ZenOrbs",
+  "description": "Bioluminescent Midnight Zen — A 100% hands-first seated WebXR meditation and stress-relief experience.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
