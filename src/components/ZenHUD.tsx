@@ -103,6 +103,9 @@ export const ZenHUD: React.FC<ZenHUDProps> = ({
   const [logoFailed, setLogoFailed] = useState(false);
   const [handsFailed, setHandsFailed] = useState(false);
   const [tabletScale, setTabletScale] = useState<number>(0.92);
+  const [isCompactViewport, setIsCompactViewport] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 1024 : false
+  );
 
   const stageWrapperRef = useRef<HTMLDivElement | null>(null);
   const stageRef = useRef<HTMLDivElement | null>(null);
@@ -137,24 +140,39 @@ export const ZenHUD: React.FC<ZenHUDProps> = ({
     if (!showLanding) return;
 
     const updateTabletScale = () => {
+      const w = window.innerWidth;
+      const compact = w < 1024;
+      setIsCompactViewport((prev) => (prev === compact ? prev : compact));
+
       const wrap = stageWrapperRef.current;
       const stage = stageRef.current;
       if (!wrap || !stage) return;
 
       const wrapW = wrap.clientWidth;
       const wrapH = wrap.clientHeight;
-      const stageW = stage.offsetWidth || 1091;
-      const stageH = stage.offsetHeight || 576;
-      const isMobile = window.innerWidth < 640;
+      const stageW = stage.offsetWidth || 1116;
+      const stageH = stage.offsetHeight || (compact ? 720 : 576);
+      const isMobile = w < 640;
 
-      const padX = isMobile ? 14 : 24;
-      const padTop = isMobile ? 54 : 74;
-      const rawScale = Math.min(
-        1.16,
-        Math.max(0.42, (wrapW - padX) / stageW),
-        Math.max(0.42, (wrapH - padTop) / stageH)
-      );
-      setTabletScale(rawScale);
+      if (compact) {
+        const padX = isMobile ? 16 : 24;
+        const padY = isMobile ? 20 : 28;
+        const rawScale = Math.min(
+          1.08,
+          Math.max(0.24, (wrapW - padX) / stageW),
+          Math.max(0.24, (wrapH - padY) / stageH)
+        );
+        setTabletScale(rawScale);
+      } else {
+        const padX = 24;
+        const padTop = 74;
+        const rawScale = Math.min(
+          1.16,
+          Math.max(0.42, (wrapW - padX) / stageW),
+          Math.max(0.42, (wrapH - padTop) / stageH)
+        );
+        setTabletScale(rawScale);
+      }
     };
 
     updateTabletScale();
@@ -167,7 +185,7 @@ export const ZenHUD: React.FC<ZenHUDProps> = ({
       ro.disconnect();
       window.removeEventListener('resize', updateTabletScale);
     };
-  }, [showLanding, snapshot.language]);
+  }, [showLanding, snapshot.language, isCompactViewport]);
 
   // Auto-hide bottom dock after 3 seconds of inactivity unless typing or listening
   useEffect(() => {
@@ -302,6 +320,269 @@ export const ZenHUD: React.FC<ZenHUDProps> = ({
     </div>
   );
 
+  const landingLogoBlock = (
+    <div
+      className="flex items-center justify-center"
+      style={{
+        transform: 'perspective(900px) rotateX(22deg)',
+        transformOrigin: '50% 85%',
+      }}
+    >
+      {!logoFailed ? (
+        <img
+          src={LOGO_SRC}
+          alt={t.brandName}
+          referrerPolicy="no-referrer"
+          onError={() => setLogoFailed(true)}
+          className="h-[136px] w-[860px] sm:h-[154px] sm:w-[940px] max-w-none select-none object-fill [filter:drop-shadow(0_0_2px_rgba(0,0,0,1))_drop-shadow(0_0_6px_rgba(0,0,0,0.98))_drop-shadow(0_3px_8px_rgba(0,0,0,0.98))_drop-shadow(0_7px_16px_rgba(0,0,0,0.95))_drop-shadow(0_14px_26px_rgba(0,0,0,0.88))_brightness(1.12)_contrast(1.08)]"
+        />
+      ) : (
+        <span className="text-6xl font-extrabold tracking-[0.18em] text-[#FFFDF7] [text-shadow:0_2px_4px_rgba(0,0,0,0.98),0_4px_14px_rgba(0,0,0,0.85)]">
+          {t.brandName}
+        </span>
+      )}
+    </div>
+  );
+
+  const landingTabletBlock = (
+    <div className="pointer-events-auto relative w-[820px]">
+      {/* Left Real Hand Grip Holding Tablet (z-0 behind Tablet) */}
+      {!handsFailed && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute hidden sm:block z-0"
+          style={{
+            left: '-148px',
+            top: '-10px',
+            width: '175px',
+            height: '615px',
+            overflow: 'hidden',
+            transform: 'scaleX(-1)',
+            WebkitMaskImage: 'linear-gradient(to right, transparent 0px, black 18px)',
+            maskImage: 'linear-gradient(to right, transparent 0px, black 18px)',
+          }}
+        >
+          <img
+            src={HANDS_SRC}
+            alt=""
+            referrerPolicy="no-referrer"
+            onError={() => setHandsFailed(true)}
+            className="select-none drop-shadow-[0_18px_36px_rgba(0,0,0,0.75)]"
+            style={{
+              width: '528px',
+              height: '640px',
+              maxWidth: 'none',
+              marginLeft: '-353px',
+            }}
+          />
+        </div>
+      )}
+
+      {/* Right Real Hand Grip Holding Tablet (z-0 behind Tablet) */}
+      {!handsFailed && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute hidden sm:block z-0"
+          style={{
+            right: '-148px',
+            top: '-10px',
+            width: '175px',
+            height: '615px',
+            overflow: 'hidden',
+            WebkitMaskImage: 'linear-gradient(to right, transparent 0px, black 18px)',
+            maskImage: 'linear-gradient(to right, transparent 0px, black 18px)',
+          }}
+        >
+          <img
+            src={HANDS_SRC}
+            alt=""
+            referrerPolicy="no-referrer"
+            onError={() => setHandsFailed(true)}
+            className="select-none drop-shadow-[0_18px_36px_rgba(0,0,0,0.75)]"
+            style={{
+              width: '528px',
+              height: '640px',
+              maxWidth: 'none',
+              marginLeft: '-353px',
+            }}
+          />
+        </div>
+      )}
+
+      {/* Centered Dark Emerald-Slate Tablet Bezel */}
+      <div className="relative z-10 w-full rounded-[28px] border-[3px] border-[#385451]/90 bg-[#081213] p-3 shadow-[0_28px_75px_rgba(0,0,0,0.85)]">
+        {/* Slim Top Tablet Camera Dot */}
+        <div className="mb-1.5 flex items-center justify-center" aria-hidden="true">
+          <span className="h-2 w-2 rounded-full border border-[#8CF2D8]/25 bg-[#132524]" />
+        </div>
+
+        {/* Interactive Tablet Sanctuary Display */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={onDismissLanding}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onDismissLanding();
+            }
+          }}
+          aria-label={t.enterSanctuary}
+          className="flex flex-col justify-between rounded-[20px] border border-[#8CF2D8]/20 bg-gradient-to-br from-[#0A1A1B] via-[#0F2726] to-[#081515] px-7 py-5 text-[#F2F6EE] cursor-pointer focus-visible:outline-2 focus-visible:outline-[#FFD166]"
+        >
+          {/* Top Tabs Bar Inside Tablet: Place Button (only Place name) + Language & Enter VR Tabs */}
+          <div>
+            <div
+              className="mb-3 flex items-center justify-between gap-2.5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={handleCyclePreset}
+                className="min-w-0 inline-flex items-center rounded-xl border border-[#8CF2D8]/35 bg-[#0B191A]/95 px-3.5 py-2 text-[14.5px] font-semibold text-[#FFFDF7] transition-colors hover:border-[#8CF2D8]/70 cursor-pointer max-w-[260px]"
+                title="Switch Place"
+              >
+                <span className="truncate">{snapshot.placeName}</span>
+              </button>
+
+              <div className="flex items-center gap-2.5 shrink-0">
+                <label
+                  className="inline-flex items-center gap-2 rounded-xl border border-[#8CF2D8]/35 bg-[#0B191A]/95 px-3.5 py-2 text-[14.5px] font-semibold text-[#E8F6F1] cursor-pointer"
+                  title="Language"
+                >
+                  <Globe className="h-4 w-4 text-[#8CF2D8]" />
+                  <select
+                    value={snapshot.language}
+                    onChange={(e) => onSelectLanguage(e.target.value as LanguageCode)}
+                    aria-label="Language Selector"
+                    className="bg-transparent text-[14.5px] font-semibold text-[#FFFDF7] outline-none cursor-pointer"
+                  >
+                    {SUPPORTED_LANGUAGES.map((lang) => (
+                      <option key={lang.code} value={lang.code} className="bg-[#0B1718] text-[#FFFDF7]">
+                        {lang.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDismissLanding();
+                    onEnterVR();
+                  }}
+                  className="inline-flex items-center gap-2 rounded-xl border border-[#FFD166]/55 bg-[#122625] px-4 py-2 text-[14.5px] font-bold text-[#FFE29A] transition-colors hover:bg-[#1B3835] hover:text-white whitespace-nowrap cursor-pointer"
+                >
+                  <Eye className="h-4 w-4" />
+                  <span>{snapshot.inVR ? t.exitVR : t.enterVR}</span>
+                </button>
+              </div>
+            </div>
+
+            <h2 className="text-[26px] font-bold leading-tight tracking-tight text-[#FFFDF7] text-balance">
+              {t.landingTitle}
+            </h2>
+            <p className="mt-1.5 text-[14.5px] leading-snug text-[#CDE2DC]">
+              {t.landingDescription}
+            </p>
+          </div>
+
+          {/* 3 Upright Feature Cards Side-by-Side */}
+          <div className="my-4 grid grid-cols-3 gap-3.5">
+            <div className="flex flex-col justify-between rounded-2xl border border-[#8CF2D8]/25 bg-[#12292A]/95 p-4 min-h-[200px]">
+              <div className="mb-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#8CF2D8]/30 bg-[#0B191A]">
+                <Compass className="h-5.5 w-5.5 text-[#8CF2D8]" />
+              </div>
+              <div>
+                <div className="text-[16.5px] font-bold leading-snug text-[#FFFDF7]">
+                  {t.cardAuraTitle}
+                </div>
+                <p className="mt-1.5 text-[13.5px] leading-snug text-[#B8D4CC]">
+                  {t.cardAuraBody}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col justify-between rounded-2xl border border-[#8CF2D8]/25 bg-[#12292A]/95 p-4 min-h-[200px]">
+              <div className="mb-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#FFD166]/30 bg-[#0B191A]">
+                <Hand className="h-5.5 w-5.5 text-[#FFD166]" />
+              </div>
+              <div>
+                <div className="text-[16.5px] font-bold leading-snug text-[#FFFDF7]">
+                  {t.cardPalmTitle}
+                </div>
+                <p className="mt-1.5 text-[13.5px] leading-snug text-[#B8D4CC]">
+                  {t.cardPalmBody}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col justify-between rounded-2xl border border-[#8CF2D8]/25 bg-[#12292A]/95 p-4 min-h-[200px]">
+              <div className="mb-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#FF9EBB]/30 bg-[#0B191A]">
+                <Sparkles className="h-5.5 w-5.5 text-[#FF9EBB]" />
+              </div>
+              <div>
+                <div className="text-[16.5px] font-bold leading-snug text-[#FFFDF7]">
+                  {t.cardStretchTitle}
+                </div>
+                <p className="mt-1.5 text-[13.5px] leading-snug text-[#B8D4CC]">
+                  {t.cardStretchBody}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer: Shortcuts + Tactile 3D Enter Buttons + Home Pill */}
+          <div>
+            <div className="flex items-center justify-between gap-2 border-t border-[#8CF2D8]/16 pt-2.5 text-[13px]">
+              <div className="text-[#B2CEC6]">
+                {snapshot.xrSupported ? (
+                  <span className="text-[#8CF2D8]">WebXR hand tracking ready</span>
+                ) : (
+                  <span>
+                    <span className="font-mono-tabular text-[#FFFDF7]">P</span> Wrist ·{' '}
+                    <span className="font-mono-tabular text-[#FFFDF7]">H</span> Dock ·{' '}
+                    <span className="font-mono-tabular text-[#FFFDF7]">M</span> Mute
+                  </span>
+                )}
+              </div>
+              <span className="text-[#FFD166] font-semibold whitespace-nowrap">{t.badgeHandsFirst}</span>
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-3.5">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDismissLanding();
+                }}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#8CF2D8]/60 border-b-4 border-b-[#0D2421] bg-gradient-to-b from-[#235E56] to-[#163B36] px-4 py-3 text-[15px] font-bold text-[#FFFDF7] shadow-[0_6px_14px_rgba(0,0,0,0.48),inset_0_1px_0_rgba(255,255,255,0.22)] transition-all hover:from-[#2A7067] hover:to-[#1B4943] active:translate-y-[2px] active:border-b-2 whitespace-nowrap cursor-pointer"
+              >
+                <Wind className="h-4.5 w-4.5 text-[#8CF2D8]" />
+                <span>{t.enterSanctuary}</span>
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDismissLanding();
+                  onEnterVR();
+                }}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#FFF2B2]/75 border-b-4 border-b-[#A67400] bg-gradient-to-b from-[#FFE082] to-[#F4B400] px-4 py-3 text-[15px] font-extrabold text-[#0B1718] shadow-[0_6px_16px_rgba(0,0,0,0.48),inset_0_1px_0_rgba(255,255,255,0.65)] transition-all hover:from-[#FFE8A3] hover:to-[#FFBF1A] active:translate-y-[2px] active:border-b-2 whitespace-nowrap cursor-pointer"
+              >
+                <Eye className="h-4.5 w-4.5" />
+                <span>{t.enterVR}</span>
+              </button>
+            </div>
+
+            <div aria-hidden="true" className="mx-auto mt-2.5 h-1 w-28 rounded-full bg-[#8CF2D8]/35" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div
       className={`pointer-events-none fixed inset-0 z-10 flex flex-col ${
@@ -376,303 +657,74 @@ export const ZenHUD: React.FC<ZenHUDProps> = ({
         </header>
       )}
 
-      {/* Main Landing Composition Over Live Rotating 360° Nature Sanctuary: Top Tilted Logo + Centered Tilted Tablet + Two Gripping Hands */}
-      {showLanding && (
-        <div className="pointer-events-none relative flex h-full min-h-0 w-full flex-1 flex-col items-center justify-end overflow-hidden">
-          {/* Top-Center Tilted Logo Wider Than Tablet (Z & s extend outside tablet edges) */}
-          <div className="pointer-events-none absolute -top-1 sm:-top-2.5 inset-x-0 z-[5] flex items-start justify-center">
-            <div
-              className="flex shrink-0 items-center justify-center origin-top"
-              style={{
-                transform: `scale(${tabletScale})`,
-              }}
-            >
-              <div
-                className="flex items-center justify-center"
-                style={{
-                  transform: 'perspective(900px) rotateX(22deg)',
-                  transformOrigin: '50% 85%',
-                }}
-              >
-                {!logoFailed ? (
-                  <img
-                    src={LOGO_SRC}
-                    alt={t.brandName}
-                    referrerPolicy="no-referrer"
-                    onError={() => setLogoFailed(true)}
-                    className="h-[82px] w-[448px] sm:h-[154px] sm:w-[940px] max-w-none select-none object-fill [filter:drop-shadow(0_0_2px_rgba(0,0,0,1))_drop-shadow(0_0_6px_rgba(0,0,0,0.98))_drop-shadow(0_3px_8px_rgba(0,0,0,0.98))_drop-shadow(0_7px_16px_rgba(0,0,0,0.95))_drop-shadow(0_14px_26px_rgba(0,0,0,0.88))_brightness(1.12)_contrast(1.08)]"
-                  />
-                ) : (
-                  <span className="text-4xl sm:text-6xl font-extrabold tracking-[0.18em] text-[#FFFDF7] [text-shadow:0_2px_4px_rgba(0,0,0,0.98),0_4px_14px_rgba(0,0,0,0.85)]">
-                    {t.brandName}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Centered Full-Size Tilted Tablet Stage With Bottom Space (Drag anywhere outside tablet to rotate 360°) */}
+      {/* Main Landing Composition Over Live Rotating 360° Nature Sanctuary */}
+      {showLanding &&
+        (isCompactViewport ? (
+          /* Mobile & Tablet (< 1024px): Centered Unified Scale Box keeping desktop horizontal proportions + logo directly above tablet */
           <div
             ref={stageWrapperRef}
-            className="pointer-events-none relative z-10 flex h-full min-h-0 w-full flex-1 items-end justify-center overflow-hidden"
+            className="pointer-events-none relative flex h-full min-h-0 w-full flex-1 items-center justify-center overflow-hidden"
           >
-            {/* Bottom-Anchored Scale Box */}
             <div
-              className="relative z-10 flex items-end justify-center shrink-0 origin-bottom"
+              ref={stageRef}
+              className="relative z-10 flex shrink-0 flex-col items-center justify-center origin-center"
               style={{
                 transform: `scale(${tabletScale})`,
               }}
             >
-              {/* Gentle Leaning-Back 3D Tilt With Clean Bottom Space */}
+              <div className="pointer-events-none relative z-[5] -mb-3 flex items-center justify-center">
+                {landingLogoBlock}
+              </div>
+
               <div
-                ref={stageRef}
-                className="relative px-2 sm:px-[148px] pb-[18px] sm:pb-[26px]"
+                className="relative z-10 px-2 sm:px-[148px] pb-[14px] sm:pb-[18px]"
                 style={{
                   transform: 'perspective(1120px) rotateX(10deg)',
                   transformOrigin: '50% 100%',
                 }}
               >
-                <div className="pointer-events-auto relative w-[388px] sm:w-[820px]">
-                  {/* Left Real Hand Grip Holding Tablet (z-0 behind Tablet) */}
-                  {!handsFailed && (
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute hidden sm:block z-0"
-                      style={{
-                        left: '-148px',
-                        top: '-10px',
-                        width: '175px',
-                        height: '615px',
-                        overflow: 'hidden',
-                        transform: 'scaleX(-1)',
-                        WebkitMaskImage: 'linear-gradient(to right, transparent 0px, black 18px)',
-                        maskImage: 'linear-gradient(to right, transparent 0px, black 18px)',
-                      }}
-                    >
-                      <img
-                        src={HANDS_SRC}
-                        alt=""
-                        referrerPolicy="no-referrer"
-                        onError={() => setHandsFailed(true)}
-                        className="select-none drop-shadow-[0_18px_36px_rgba(0,0,0,0.75)]"
-                        style={{
-                          width: '528px',
-                          height: '640px',
-                          maxWidth: 'none',
-                          marginLeft: '-353px',
-                        }}
-                      />
-                    </div>
-                  )}
+                {landingTabletBlock}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Desktop (>= 1024px): Unchanged Full-Size Bottom-Anchored Tablet + Top-Center Tilted Logo */
+          <div className="pointer-events-none relative flex h-full min-h-0 w-full flex-1 flex-col items-center justify-end overflow-hidden">
+            <div className="pointer-events-none absolute -top-2.5 inset-x-0 z-[5] flex items-start justify-center">
+              <div
+                className="flex shrink-0 items-center justify-center origin-top"
+                style={{
+                  transform: `scale(${tabletScale})`,
+                }}
+              >
+                {landingLogoBlock}
+              </div>
+            </div>
 
-                  {/* Right Real Hand Grip Holding Tablet (z-0 behind Tablet) */}
-                  {!handsFailed && (
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute hidden sm:block z-0"
-                      style={{
-                        right: '-148px',
-                        top: '-10px',
-                        width: '175px',
-                        height: '615px',
-                        overflow: 'hidden',
-                        WebkitMaskImage: 'linear-gradient(to right, transparent 0px, black 18px)',
-                        maskImage: 'linear-gradient(to right, transparent 0px, black 18px)',
-                      }}
-                    >
-                      <img
-                        src={HANDS_SRC}
-                        alt=""
-                        referrerPolicy="no-referrer"
-                        onError={() => setHandsFailed(true)}
-                        className="select-none drop-shadow-[0_18px_36px_rgba(0,0,0,0.75)]"
-                        style={{
-                          width: '528px',
-                          height: '640px',
-                          maxWidth: 'none',
-                          marginLeft: '-353px',
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Centered Dark Emerald-Slate Tablet Bezel */}
-                  <div className="relative z-10 w-full rounded-[28px] border-[3px] border-[#385451]/90 bg-[#081213] p-2.5 sm:p-3 shadow-[0_28px_75px_rgba(0,0,0,0.85)]">
-                    {/* Slim Top Tablet Camera Dot */}
-                    <div className="mb-1.5 flex items-center justify-center" aria-hidden="true">
-                      <span className="h-2 w-2 rounded-full border border-[#8CF2D8]/25 bg-[#132524]" />
-                    </div>
-
-                    {/* Interactive Tablet Sanctuary Display */}
-                    <div
-                      role="button"
-                      tabIndex={0}
-                      onClick={onDismissLanding}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          onDismissLanding();
-                        }
-                      }}
-                      aria-label={t.enterSanctuary}
-                      className="flex flex-col justify-between rounded-[20px] border border-[#8CF2D8]/20 bg-gradient-to-br from-[#0A1A1B] via-[#0F2726] to-[#081515] px-4 py-4 sm:px-7 sm:py-5 text-[#F2F6EE] cursor-pointer focus-visible:outline-2 focus-visible:outline-[#FFD166]"
-                    >
-                      {/* Top Tabs Bar Inside Tablet: Place Button (only Place name) + Language & Enter VR Tabs */}
-                      <div>
-                        <div
-                          className="mb-3 flex items-center justify-between gap-2.5"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <button
-                            type="button"
-                            onClick={handleCyclePreset}
-                            className="min-w-0 inline-flex items-center rounded-xl border border-[#8CF2D8]/35 bg-[#0B191A]/95 px-3.5 py-2 text-xs sm:text-[14.5px] font-semibold text-[#FFFDF7] transition-colors hover:border-[#8CF2D8]/70 cursor-pointer max-w-[250px]"
-                            title="Switch Place"
-                          >
-                            <span className="truncate">{snapshot.placeName}</span>
-                          </button>
-
-                          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-                            <label
-                              className="inline-flex items-center gap-2 rounded-xl border border-[#8CF2D8]/35 bg-[#0B191A]/95 px-3.5 py-2 text-xs sm:text-[14.5px] font-semibold text-[#E8F6F1] cursor-pointer"
-                              title="Language"
-                            >
-                              <Globe className="h-4 w-4 text-[#8CF2D8]" />
-                              <select
-                                value={snapshot.language}
-                                onChange={(e) => onSelectLanguage(e.target.value as LanguageCode)}
-                                aria-label="Language Selector"
-                                className="bg-transparent text-xs sm:text-[14.5px] font-semibold text-[#FFFDF7] outline-none cursor-pointer"
-                              >
-                                {SUPPORTED_LANGUAGES.map((lang) => (
-                                  <option key={lang.code} value={lang.code} className="bg-[#0B1718] text-[#FFFDF7]">
-                                    {lang.label}
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
-
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onDismissLanding();
-                                onEnterVR();
-                              }}
-                              className="inline-flex items-center gap-2 rounded-xl border border-[#FFD166]/55 bg-[#122625] px-4 py-2 text-xs sm:text-[14.5px] font-bold text-[#FFE29A] transition-colors hover:bg-[#1B3835] hover:text-white whitespace-nowrap cursor-pointer"
-                            >
-                              <Eye className="h-4 w-4" />
-                              <span>{snapshot.inVR ? t.exitVR : t.enterVR}</span>
-                            </button>
-                          </div>
-                        </div>
-
-                        <h2 className="text-[20px] sm:text-[26px] font-bold leading-tight tracking-tight text-[#FFFDF7] text-balance">
-                          {t.landingTitle}
-                        </h2>
-                        <p className="mt-1.5 text-[12.5px] sm:text-[14.5px] leading-snug text-[#CDE2DC]">
-                          {t.landingDescription}
-                        </p>
-                      </div>
-
-                      {/* 3 Upright Feature Cards Side-by-Side */}
-                      <div className="my-3.5 sm:my-4 grid grid-cols-3 gap-2 sm:gap-3.5">
-                        <div className="flex flex-col justify-between rounded-xl sm:rounded-2xl border border-[#8CF2D8]/25 bg-[#12292A]/95 p-3 sm:p-4 min-h-[164px] sm:min-h-[200px]">
-                          <div className="mb-2 flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl border border-[#8CF2D8]/30 bg-[#0B191A]">
-                            <Compass className="h-5 w-5 sm:h-5.5 sm:w-5.5 text-[#8CF2D8]" />
-                          </div>
-                          <div>
-                            <div className="text-[13.5px] sm:text-[16.5px] font-bold leading-snug text-[#FFFDF7]">
-                              {t.cardAuraTitle}
-                            </div>
-                            <p className="mt-1.5 text-[11px] sm:text-[13.5px] leading-snug text-[#B8D4CC]">
-                              {t.cardAuraBody}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col justify-between rounded-xl sm:rounded-2xl border border-[#8CF2D8]/25 bg-[#12292A]/95 p-3 sm:p-4 min-h-[164px] sm:min-h-[200px]">
-                          <div className="mb-2 flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl border border-[#FFD166]/30 bg-[#0B191A]">
-                            <Hand className="h-5 w-5 sm:h-5.5 sm:w-5.5 text-[#FFD166]" />
-                          </div>
-                          <div>
-                            <div className="text-[13.5px] sm:text-[16.5px] font-bold leading-snug text-[#FFFDF7]">
-                              {t.cardPalmTitle}
-                            </div>
-                            <p className="mt-1.5 text-[11px] sm:text-[13.5px] leading-snug text-[#B8D4CC]">
-                              {t.cardPalmBody}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col justify-between rounded-xl sm:rounded-2xl border border-[#8CF2D8]/25 bg-[#12292A]/95 p-3 sm:p-4 min-h-[164px] sm:min-h-[200px]">
-                          <div className="mb-2 flex h-9 w-9 sm:h-11 sm:w-11 shrink-0 items-center justify-center rounded-xl border border-[#FF9EBB]/30 bg-[#0B191A]">
-                            <Sparkles className="h-5 w-5 sm:h-5.5 sm:w-5.5 text-[#FF9EBB]" />
-                          </div>
-                          <div>
-                            <div className="text-[13.5px] sm:text-[16.5px] font-bold leading-snug text-[#FFFDF7]">
-                              {t.cardStretchTitle}
-                            </div>
-                            <p className="mt-1.5 text-[11px] sm:text-[13.5px] leading-snug text-[#B8D4CC]">
-                              {t.cardStretchBody}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Footer: Shortcuts + Tactile 3D Enter Buttons + Home Pill */}
-                      <div>
-                        <div className="flex items-center justify-between gap-2 border-t border-[#8CF2D8]/16 pt-2.5 text-[11.5px] sm:text-[13px]">
-                          <div className="text-[#B2CEC6]">
-                            {snapshot.xrSupported ? (
-                              <span className="text-[#8CF2D8]">WebXR hand tracking ready</span>
-                            ) : (
-                              <span>
-                                <span className="font-mono-tabular text-[#FFFDF7]">P</span> Wrist ·{' '}
-                                <span className="font-mono-tabular text-[#FFFDF7]">H</span> Dock ·{' '}
-                                <span className="font-mono-tabular text-[#FFFDF7]">M</span> Mute
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-[#FFD166] font-semibold whitespace-nowrap">{t.badgeHandsFirst}</span>
-                        </div>
-
-                        <div className="mt-3 grid grid-cols-2 gap-3.5">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onDismissLanding();
-                            }}
-                            className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#8CF2D8]/60 border-b-4 border-b-[#0D2421] bg-gradient-to-b from-[#235E56] to-[#163B36] px-4 py-2.5 sm:py-3 text-[13.5px] sm:text-[15px] font-bold text-[#FFFDF7] shadow-[0_6px_14px_rgba(0,0,0,0.48),inset_0_1px_0_rgba(255,255,255,0.22)] transition-all hover:from-[#2A7067] hover:to-[#1B4943] active:translate-y-[2px] active:border-b-2 whitespace-nowrap cursor-pointer"
-                          >
-                            <Wind className="h-4 w-4 sm:h-4.5 sm:w-4.5 text-[#8CF2D8]" />
-                            <span>{t.enterSanctuary}</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onDismissLanding();
-                              onEnterVR();
-                            }}
-                            className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#FFF2B2]/75 border-b-4 border-b-[#A67400] bg-gradient-to-b from-[#FFE082] to-[#F4B400] px-4 py-2.5 sm:py-3 text-[13.5px] sm:text-[15px] font-extrabold text-[#0B1718] shadow-[0_6px_16px_rgba(0,0,0,0.48),inset_0_1px_0_rgba(255,255,255,0.65)] transition-all hover:from-[#FFE8A3] hover:to-[#FFBF1A] active:translate-y-[2px] active:border-b-2 whitespace-nowrap cursor-pointer"
-                          >
-                            <Eye className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-                            <span>{t.enterVR}</span>
-                          </button>
-                        </div>
-
-                        <div aria-hidden="true" className="mx-auto mt-2.5 h-1 w-28 rounded-full bg-[#8CF2D8]/35" />
-                      </div>
-                    </div>
-                  </div>
+            <div
+              ref={stageWrapperRef}
+              className="pointer-events-none relative z-10 flex h-full min-h-0 w-full flex-1 items-end justify-center overflow-hidden"
+            >
+              <div
+                className="relative z-10 flex items-end justify-center shrink-0 origin-bottom"
+                style={{
+                  transform: `scale(${tabletScale})`,
+                }}
+              >
+                <div
+                  ref={stageRef}
+                  className="relative px-[148px] pb-[26px]"
+                  style={{
+                    transform: 'perspective(1120px) rotateX(10deg)',
+                    transformOrigin: '50% 100%',
+                  }}
+                >
+                  {landingTabletBlock}
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        ))}
 
       {/* Compact Auto-Hiding Bottom Dock */}
       {!showLanding && (
